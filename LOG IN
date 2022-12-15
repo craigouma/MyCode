@@ -1,0 +1,93 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const { Client } = require('pg');
+
+const app = express();
+const port = 3000;
+
+// Set up the session middleware
+app.use(
+  session({
+    secret: 'my-secret-key',
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+// Parse incoming request bodies in a middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Set up the database client
+const client = new Client({
+  user: 'user',
+  host: 'localhost',
+  database: 'my_db',
+  password: 'password',
+  port: 5432,
+});
+
+// Connect to the database
+client.connect();
+
+// Render the login page
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <link rel="stylesheet" href="/styles.css" />
+      </head>
+      <body>
+        <h1>Welcome to the Login/Registration Page</h1>
+        <p>Please log in or register below:</p>
+        <form method="post" action="/login">
+          <label>
+            Email:
+            <input type="email" name="email" />
+          </label>
+          <label>
+            Password:
+            <input type="password" name="password" />
+          </label>
+          <input type="submit" value="Log In" />
+        </form>
+        <p>Or register here:</p>
+        <form method="post" action="/register">
+          <label>
+            Email:
+            <input type="email" name="email" />
+          </label>
+          <label>
+            Password:
+            <input type="password" name="password" />
+          </label>
+          <label>
+            Confirm Password:
+            <input type="password" name="confirm_password" />
+          </label>
+          <input type="submit" value="Register" />
+        </form>
+      </body>
+    </html>
+  `);
+});
+
+// Handle login requests
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  // Check if the email and password are valid
+  client
+    .query('SELECT * FROM users WHERE email = $1 AND password = $2', [
+      email,
+      password,
+    ])
+    .then(result => {
+      if (result.rows.length > 0) {
+        // Save the user's email in the session
+        req.session.email = email;
+
+        // Redirect to the dashboard page
+        res.redirect('/dashboard');
+      }
