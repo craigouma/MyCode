@@ -1,0 +1,10 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <h1>Welcome to the Dashboard</h1>
+    <p>Hello, ${req.session.email}</p>
+    <p>You are now logged in and can access the dashboard.</p>
+  </body>
+</html>
